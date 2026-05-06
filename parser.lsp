@@ -137,7 +137,7 @@
          (is-id-list (rest char-list)))))
 
 (defun is-number-list (chars)
-    (cond ((null chars) t)
+    (cond ((null str) t)
     ;är karaktären en digit?
     ((digit-char-p (first chars))
      (is-number-list (rest chars)))
@@ -327,7 +327,41 @@
 ; <type>         --> integer | real | boolean
 ;;=====================================================================
 
-;; *** TO BE DONE ***
+(defun var-part (state)
+  ((eq (token state) 'VAR) (match state 'VAR))
+  (var-dec-list state)
+  )
+  
+(defun var-dec (state)
+  (id-list state)
+  (match state 'COLON)
+  (type state)
+  (match state 'SEMICOLON)
+  )
+
+(defun var-dec-list (state)
+  (var-dec state)
+  (if (eq (token state) 'ID) 
+      (var-dec-list state))
+  )
+
+(defun id-list-helper (state)
+  (match state 'COMMA)
+         (id-list state))
+
+(defun id-list (state)
+    (match state 'ID)
+    (if (eq ((first pstate-lookahead state)) 'COMMA) (id-list-helper state))
+  )
+
+(defun type (state)
+  (cond
+    ((eq (token state) 'INTEGER) (match state 'INTEGER))
+    ((eq (token state) 'REAL) (match state 'REAL))
+    ((eq (token state) 'BOOLEAN) (match state 'BOOLEAN))
+    (t (synerr3 state))))
+
+  )
 
 ;;=====================================================================
 ; <program-header>
