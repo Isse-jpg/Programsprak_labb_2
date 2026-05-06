@@ -137,7 +137,7 @@
          (is-id-list (rest char-list)))))
 
 (defun is-number-list (chars)
-    (cond ((null str) t)
+    (cond ((null chars) t)
     ;är karaktären en digit?
     ((digit-char-p (first chars))
      (is-number-list (rest chars)))
@@ -313,7 +313,11 @@
 ; <operand>       --> id | number
 ;;=====================================================================
 
-
+(defun operand (state)
+  (cond 
+    ((eq (token state) 'ID)  (match state 'ID))
+    ((eq (token state) 'NUM) (match state 'NUM)) 
+    (t (synerr3 state)))) 
 
 ;;=====================================================================
 ; <var-part>     --> var <var-dec-list>
@@ -332,7 +336,12 @@
 (defun program-header (state)
   (match state 'PROGRAM)
   (match state 'ID)
-  (match state '"(")
+  (match state 'LPAREN)
+  (match state 'INPUT)
+  (match state 'COMMA)
+  (match state 'OUTPUT)
+  (match state 'RPAREN)
+  (match state 'SEMICOLON)
 )
 
 ;;=====================================================================
