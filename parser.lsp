@@ -122,15 +122,47 @@
 ;;=====================================================================
 ; ID is [A-Z,a-z][A-Z,a-z,0-9]*          number is [0-9][0-9]*
 ;;=====================================================================
+(defun is-id-list (chars)
+  (cond
+    ((null chars) t) 
+    ((or (alpha-char-p (first chars)) 
+         (digit-char-p (first chars)))
+     (is-id-list (rest chars))) 
+    (t nil))) 
 
-(defun is-id (str)
-;; *** TO BE DONE ***
-)
+(defun is-id-alt (str)
+  (let ((char-list (coerce str 'list))) 
+    (and (> (length str) 0) 
+         (alpha-char-p (first char-list)) 
+         (is-id-list (rest char-list)))))
+
+(defun is-number-list (chars)
+    (cond ((null str) t)
+    ;är karaktären en digit?
+    ((digit-char-p (first chars))
+     (is-number-list (rest chars)))
+
+    (t NIL))
+  )
+
+
+(defun is-number-alt (str)
+  (if (> (length str) 0)
+    ; gör strängen till en lista så man kan köra is-number-list på den
+    (is-number-list (coerce str 'list))
+  )
+
+
 
 (defun is-number (str)
-;; *** TO BE DONE ***
-)
+  (and (> (length str) 0)
+       (every #'digit-char-p str))
+  )
 
+(defun is-id (str)
+  (and (> (length str) 0)
+       (alpha-char-p (char str 0))
+       (every #'alphanumericp (subseq str 1))))
 ;;=====================================================================
 ; THIS IS THE PARSER PART
 ;;=====================================================================
@@ -281,7 +313,7 @@
 ; <operand>       --> id | number
 ;;=====================================================================
 
-;; *** TO BE DONE ***
+
 
 ;;=====================================================================
 ; <var-part>     --> var <var-dec-list>
@@ -365,6 +397,6 @@
 
 ;;(parse "testfiles/testok1.pas")
 
-;;=====================================================================
+;;===================================================================end of string ==
 ; THE PARSER - end of code
 ;;=====================================================================
