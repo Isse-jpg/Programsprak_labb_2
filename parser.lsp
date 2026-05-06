@@ -91,10 +91,25 @@
 (defun map-lexeme (lexeme)
 (format t "Symbol: ~S ~%" lexeme)
    (list (cond
-         ((string=   lexeme "program")  'PROGRAM )
-         ((string=   lexeme "var"    )  'VAR     )
+         ((string-equal lexeme "program")  'PROGRAM )
+         ((string-equal lexeme "var"    )  'VAR     )
+         ((string-equal lexeme "input")    'INPUT)
+         ((string-equal lexeme "output")   'OUTPUT)
+         ((string-equal lexeme "begin")   'BEGIN)
+         ((string-equal lexeme "end")     'END)
+         ((string-equal lexeme "integer") 'INTEGER)
+         ((string-equal lexeme "real")    'REAL)
+         ((string-equal lexeme "boolean") 'BOOLEAN)
 
-;; etc,  *** TO BE DONE ***
+         ((string= lexeme ":=")      'ASSIGN)
+         ((string= lexeme "+")       'PLUS)
+         ((string= lexeme "*")       'MULT)
+         ((string= lexeme "(")       'LPAREN)
+         ((string= lexeme ")")       'RPAREN)
+         ((string= lexeme ":")       'COLON)
+         ((string= lexeme ";")       'SEMICOLON)
+         ((string= lexeme ",")       'COMMA)
+         ((string= lexeme ".")       'DOT)
 
          ((string=   lexeme ""       )	'EOF     )
          ((is-id     lexeme          )  'ID      )
@@ -162,9 +177,11 @@
 ; lexeme - returns the lexeme from (token lexeme)(reader)
 ;;=====================================================================
 
-(defun token  (state) ;; *** TO BE DONE ***
+(defun token  (state) 
+(first (pstate-lookahead state))
 )
-(defun lexeme (state) ;; *** TO BE DONE ***
+(defun lexeme (state) 
+(second (pstate-lookahead state))
 )
 
 ;;=====================================================================
@@ -280,7 +297,11 @@
 ; <program-header>
 ;;=====================================================================
 
-;; *** TO BE DONE ***
+(defun program-header (state)
+  (match state 'PROGRAM)
+  (match state 'ID)
+  (match state '"(")
+)
 
 ;;=====================================================================
 ; <program> --> <program-header><var-part><stat-part>
