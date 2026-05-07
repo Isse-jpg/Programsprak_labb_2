@@ -313,6 +313,48 @@
 ; <operand>       --> id | number
 ;;=====================================================================
 
+(defun stat-part (state)
+  (match state 'BEGIN)
+  (stat-list state)
+  (match state 'END))
+
+(defun stat-list (state)
+  (stat state)
+  (when (eq (token state) 'SEMICOLON) 
+    (match state 'SEMICOLON)
+     (stat-list state)))
+
+(defun stat (state)
+  (assign-stat state))
+
+(defun assign-stat (state)
+  (match state 'ID)
+  (match state 'ASSIGN)
+  (expr state))
+
+(defun expr (state)
+  (term state)
+
+  (if (eq (token state) 'PLUS) 
+    ((match state 'PLUS) 
+     (expr state))))
+
+  )
+(defun term (state)
+  (factor state)
+  (if (eq (token state) 'MULT) 
+    ((match state 'MULT) 
+     (term state))))
+
+
+(defun factor (state)
+  (cond
+    ((eq (token state) 'LPAREN)
+     (match state 'LPAREN)
+     (expr state)
+     (match state 'RPAREN))
+    (t (operand state))))
+
 (defun operand (state)
   (cond 
     ((eq (token state) 'ID)  (match state 'ID))
@@ -328,7 +370,7 @@
 ;;=====================================================================
 
 (defun var-part (state)
-  ((eq (token state) 'VAR) (match state 'VAR))
+  (match state 'VAR)
   (var-dec-list state)
   )
   
@@ -354,14 +396,14 @@
     (if (eq ((first pstate-lookahead state)) 'COMMA) (id-list-helper state))
   )
 
-(defun type (state)
+(defun parse-type (state)
   (cond
     ((eq (token state) 'INTEGER) (match state 'INTEGER))
     ((eq (token state) 'REAL) (match state 'REAL))
     ((eq (token state) 'BOOLEAN) (match state 'BOOLEAN))
-    (t (synerr3 state))))
+    (t (synerr2 state))))
 
-  )
+  
 
 ;;=====================================================================
 ; <program-header>
@@ -392,7 +434,8 @@
 ;;=====================================================================
 
 (defun check-end (state)
-;; *** TO BE DONE ***
+
+
 )
 
 ;;=====================================================================
