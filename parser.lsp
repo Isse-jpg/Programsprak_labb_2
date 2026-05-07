@@ -109,7 +109,7 @@
          ((string= lexeme ":")       'COLON)
          ((string= lexeme ";")       'SEMICOLON)
          ((string= lexeme ",")       'COMMA)
-         ((string= lexeme ".")       'DOT)
+         ((string= lexeme ".")       'FSTOP)
 
          ((string=   lexeme ""       )	'EOF     )
          ((is-id     lexeme          )  'ID      )
@@ -296,7 +296,7 @@
   (match state 'BEGIN)
   (stat-list state)
   (match state 'END)
-  (match state 'DOT))
+  (match state 'FSTOP))
 
 (defun stat-list (state)
   (stat state)
@@ -308,7 +308,7 @@
   (assign-stat state))
 
 (defun assign-stat (state)
-  (when (not (symtab-member state (lexeme state)))
+  (unless (symtab-member state (lexeme state))
     (semerr2 state))
   
   (match state 'ID)
@@ -371,21 +371,18 @@
 
 (defun var-dec-list (state)
   (var-dec state)
-  (if (eq (token state) 'ID) 
+  (when (eq (token state) 'ID) 
+   
       (var-dec-list state))
   )
 
-(defun id-list-helper (state)
-  (match state 'COMMA)
-         (id-list state))
-
 (defun id-list (state)
-    (when (symtab-member state (lexeme state))
-      (semerr1 state))
-        
     (symtab-add state (lexeme state))
     (match state 'ID)
-    (if (eq (token state) 'COMMA) (id-list-helper state)))
+
+    (when (eq (token state) 'COMMA) 
+      (match state 'COMMA)      
+      (id-list state)))        
 
 (defun parse-type (state)
   (cond
@@ -426,7 +423,7 @@
 ;;=====================================================================
 
 (defun check-end (state)
-    (if (not (eq (token state) 'EOF))
+    (unless (eq (token state) 'EOF)
       (semerr3 state)))
 
 ;;=====================================================================
@@ -456,15 +453,9 @@
 ; THE PARSER - parse all the test files
 ;;=====================================================================
 (defun parse-list-recursive (file-list)
-  (cond
-    ((null file-list)
-     t
-     )
-    (t
-      (parse (first file-list))
-      (parse-list-recursive (rest file-list))))
-
-  )
+  (when file-list
+    (parse (first file-list))
+    (parse-list-recursive (rest file-list))))
 
 (defun parse-all ()
 
