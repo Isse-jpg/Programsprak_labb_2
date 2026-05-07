@@ -189,12 +189,23 @@
 ;;=====================================================================
 
 (defun symtab-add (state id)
-;; *** TO BE DONE ***
-)
+  (cond
+    ((symtab-member state id) 
+     (semerr1 state))
+    
+    (t 
+     (setf (pstate-symtab state) 
+           (append (pstate-symtab state) (list id))))))
+(defun find-in-list (id lst)
+  (cond
+    ((null lst) nil) 
+    
+    ((string= id (first lst)) lst) 
+    
+    (t (find-in-list id (rest lst))))) 
 
 (defun symtab-member (state id)
-;; *** TO BE DONE ***
-)
+  (find-in-list id (pstate-symtab state)))
 
 (defun symtab-display (state)
    (format t "------------------------------------------------------~%")
@@ -284,7 +295,8 @@
 (defun stat-part (state)
   (match state 'BEGIN)
   (stat-list state)
-  (match state 'END))
+  (match state 'END)
+  (match state 'DOT))
 
 (defun stat-list (state)
   (stat state)
@@ -296,6 +308,9 @@
   (assign-stat state))
 
 (defun assign-stat (state)
+  (when (not (symtab-member state (lexeme state)))
+    (semerr2 state))
+  
   (match state 'ID)
   (match state 'ASSIGN)
   (expr state))
@@ -322,10 +337,18 @@
 
 (defun operand (state)
   (cond 
-    ((eq (token state) 'ID)  (match state 'ID))
-    ((eq (token state) 'NUM) (match state 'NUM)) 
-    (t (synerr3 state)))) 
+    ((eq (token state) 'ID)
+     
+     (when (not (symtab-member state (lexeme state)))
+       (semerr2 state))
+     
+     (match state 'ID))
 
+    ((eq (token state) 'NUM) 
+     (match state 'NUM)) 
+    
+    (t 
+     (synerr3 state))))
 ;;=====================================================================
 ; <var-part>     --> var <var-dec-list>
 ; <var-dec-list> --> <var-dec> | <var-dec><var-dec-list>
@@ -342,7 +365,7 @@
 (defun var-dec (state)
   (id-list state)
   (match state 'COLON)
-  (type state)
+  (parse-type state)
   (match state 'SEMICOLON)
   )
 
@@ -357,6 +380,10 @@
          (id-list state))
 
 (defun id-list (state)
+    (when (symtab-member state (lexeme state))
+      (semerr1 state))
+        
+    (symtab-add state (lexeme state))
     (match state 'ID)
     (if (eq (token state) 'COMMA) (id-list-helper state)))
 
@@ -391,6 +418,7 @@
    (program-header state)
    (var-part       state)
    (stat-part      state)
+   (check-end      state)
 )
 
 ;;=====================================================================
@@ -398,9 +426,8 @@
 ;;=====================================================================
 
 (defun check-end (state)
-
-
-)
+    (if (not (eq (token state) 'EOF))
+      (semerr3 state)))
 
 ;;=====================================================================
 ; Test parser for file name input
@@ -428,10 +455,21 @@
 ;;=====================================================================
 ; THE PARSER - parse all the test files
 ;;=====================================================================
+(defun parse-list-recursive (file-list)
+  (cond
+    ((null file-list)
+     t
+     )
+    (t
+      (parse (first file-list))
+      (parse-list-recursive (rest file-list))))
+
+  )
 
 (defun parse-all ()
 
-;; *** TO BE DONE ***
+  ;för att sortera testerna så att de körs testa, testb.... testz
+  (parse-list-recursive (sort (directory "testfiles/*.pas") #'string< :key #'namestring))
 
 )
 
@@ -439,7 +477,7 @@
 ; THE PARSER - test all files
 ;;=====================================================================
 
-;; (parse-all)
+(parse-all)
 
 ;;=====================================================================
 ; THE PARSER - test a single file
