@@ -415,7 +415,6 @@
    (program-header state)
    (var-part       state)
    (stat-part      state)
-   (check-end      state)
 )
 
 ;;=====================================================================
@@ -424,7 +423,10 @@
 
 (defun check-end (state)
     (unless (eq (token state) 'EOF)
-      (semerr3 state)))
+      (semerr3 state)
+    (get-token state)
+    (check-end state)))
+    
 
 ;;=====================================================================
 ; Test parser for file name input
