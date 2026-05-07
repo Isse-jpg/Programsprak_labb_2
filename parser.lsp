@@ -122,38 +122,6 @@
 ;;=====================================================================
 ; ID is [A-Z,a-z][A-Z,a-z,0-9]*          number is [0-9][0-9]*
 ;;=====================================================================
-(defun is-id-list (chars)
-  (cond
-    ((null chars) t) 
-    ((or (alpha-char-p (first chars)) 
-         (digit-char-p (first chars)))
-     (is-id-list (rest chars))) 
-    (t nil))) 
-
-(defun is-id-alt (str)
-  (let ((char-list (coerce str 'list))) 
-    (and (> (length str) 0) 
-         (alpha-char-p (first char-list)) 
-         (is-id-list (rest char-list)))))
-
-(defun is-number-list (chars)
-    (cond ((null str) t)
-    ;är karaktären en digit?
-    ((digit-char-p (first chars))
-     (is-number-list (rest chars)))
-
-    (t NIL))
-  )
-
-
-(defun is-number-alt (str)
-  (if (> (length str) 0)
-    ; gör strängen till en lista så man kan köra is-number-list på den
-    (is-number-list (coerce str 'list))
-  )
-
-
-
 (defun is-number (str)
   (and (> (length str) 0)
        (every #'digit-char-p str))
@@ -334,18 +302,15 @@
 
 (defun expr (state)
   (term state)
+  (when (eq (token state) 'PLUS) 
+    (match state 'PLUS) 
+    (expr state)))
 
-  (if (eq (token state) 'PLUS) 
-    ((match state 'PLUS) 
-     (expr state))))
-
-  )
 (defun term (state)
   (factor state)
-  (if (eq (token state) 'MULT) 
-    ((match state 'MULT) 
-     (term state))))
-
+  (when (eq (token state) 'MULT) 
+    (match state 'MULT) 
+    (term state)))
 
 (defun factor (state)
   (cond
@@ -393,8 +358,7 @@
 
 (defun id-list (state)
     (match state 'ID)
-    (if (eq ((first pstate-lookahead state)) 'COMMA) (id-list-helper state))
-  )
+    (if (eq (token state) 'COMMA) (id-list-helper state)))
 
 (defun parse-type (state)
   (cond
