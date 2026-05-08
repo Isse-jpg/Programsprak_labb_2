@@ -104,10 +104,10 @@
          ((string= lexeme ":=")      'ASSIGN)
          ((string= lexeme "+")       'PLUS)
          ((string= lexeme "*")       'MULT)
-         ((string= lexeme "(")       'LPAREN)
-         ((string= lexeme ")")       'RPAREN)
+         ((string= lexeme "(")       'LP)
+         ((string= lexeme ")")       'RP)
          ((string= lexeme ":")       'COLON)
-         ((string= lexeme ";")       'SEMICOLON)
+         ((string= lexeme ";")       'SCOLON)
          ((string= lexeme ",")       'COMMA)
          ((string= lexeme ".")       'FSTOP)
 
@@ -194,8 +194,10 @@
      (semerr1 state))
     
     (t 
-     (setf (pstate-symtab state) 
-           (append (pstate-symtab state) (list id))))))
+     (when (is-id id) 
+       (setf (pstate-symtab state) 
+             (append (pstate-symtab state) (list id)))))))
+
 (defun find-in-list (id lst)
   (cond
     ((null lst) nil) 
@@ -300,16 +302,17 @@
 
 (defun stat-list (state)
   (stat state)
-  (when (eq (token state) 'SEMICOLON) 
-    (match state 'SEMICOLON)
+  (when (eq (token state) 'SCOLON) 
+    (match state 'SCOLON)
      (stat-list state)))
 
 (defun stat (state)
   (assign-stat state))
 
 (defun assign-stat (state)
-  (unless (symtab-member state (lexeme state))
-    (semerr2 state))
+(when (eq (token state) 'ID)
+    (unless (symtab-member state (lexeme state))
+      (semerr2 state)))
   
   (match state 'ID)
   (match state 'ASSIGN)
@@ -329,10 +332,10 @@
 
 (defun factor (state)
   (cond
-    ((eq (token state) 'LPAREN)
-     (match state 'LPAREN)
+    ((eq (token state) 'LP)
+     (match state 'LP)
      (expr state)
-     (match state 'RPAREN))
+     (match state 'RP))
     (t (operand state))))
 
 (defun operand (state)
@@ -366,7 +369,7 @@
   (id-list state)
   (match state 'COLON)
   (parse-type state)
-  (match state 'SEMICOLON)
+  (match state 'SCOLON)
   )
 
 (defun var-dec-list (state)
@@ -400,12 +403,12 @@
 (defun program-header (state)
   (match state 'PROGRAM)
   (match state 'ID)
-  (match state 'LPAREN)
+  (match state 'LP)
   (match state 'INPUT)
   (match state 'COMMA)
   (match state 'OUTPUT)
-  (match state 'RPAREN)
-  (match state 'SEMICOLON)
+  (match state 'RP)
+  (match state 'SCOLON)
 )
 
 ;;=====================================================================
@@ -456,16 +459,26 @@
 ;;=====================================================================
 (defun parse-list-recursive (file-list)
   (when file-list
-    (parse (first file-list))
+    
+    ;;För att få EXAKT samma output som i den givna filen
+    (let ((relative-name (concatenate 'string "testfiles/" (file-namestring (first file-list)))))
+      (parse relative-name))
+      
     (parse-list-recursive (rest file-list))))
 
 (defun parse-all ()
-
-  ;för att sortera testerna så att de körs testa, testb.... testz
-  (parse-list-recursive (sort (directory "testfiles/*.pas") #'string< :key #'namestring))
-
-)
-
+  ;;för att få EXAKT samma ordning som i outputen
+  (let (
+        (tests   (sort (directory "testfiles/test?.pas") #'string< :key #'namestring))
+        
+        (testoks (sort (directory "testfiles/testok*.pas") #'string< :key #'namestring))
+        
+        (funs    (sort (directory "testfiles/fun*.pas") #'string< :key #'namestring))
+        
+        (sems    (sort (directory "testfiles/sem*.pas") #'string< :key #'namestring))
+       )
+       
+    (parse-list-recursive (append tests testoks funs sems))))
 ;;=====================================================================
 ; THE PARSER - test all files
 ;;=====================================================================
